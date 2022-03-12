@@ -1,0 +1,18 @@
+# Ignore all text files
+*.txt
+
+# Ignore all xml files
+*.xml
+
+# Ignore PyCharm files
+*.idea
+*.iml
+
+# Default ignored files
+/shelf/
+/workspace.xml
+# Editor-based HTTP Client requests
+/httpRequests/
+# Datasource local storage ignored files
+/dataSources/
+/dataSources.local.xml
