@@ -16,6 +16,41 @@ from tensorflow import keras
 import pandas as pd
 
 
+####################################
+# XGBoost Pipeline
+####################################
+
+def xgboost_load_ds_samples(train_df_pth, val_df_pth, test_df_pth):
+
+    # Create lists to hold the sample paths
+    test_samples = []
+    train_samples = []
+    val_samples = []
+
+    # Load the csv files with the train, validation, and test splits
+    train_fn_df = pd.read_csv(train_df_pth)
+    val_fn_df = pd.read_csv(val_df_pth)
+    test_fn_df = pd.read_csv(test_df_pth)
+
+    # Loop through the CSV files and extract + organize the different chips
+    for idx, row in test_fn_df.iterrows():
+        test_samples.append((row['s1'], row['pre_event_grd'], row['pre_event_coh'], row['co_event_coh'], row['s2_lbl']))
+
+    for idx, row in train_fn_df.iterrows():
+        train_samples.append(
+            (row['s1'], row['pre_event_grd'], row['pre_event_coh'], row['co_event_coh'], row['s2_lbl']))
+
+    for idx, row in val_fn_df.iterrows():
+        val_samples.append((row['s1'], row['pre_event_grd'], row['pre_event_coh'], row['co_event_coh'], row['s2_lbl']))
+
+    # grab the dataset sizes
+    train_size = len(train_samples)
+    val_size = len(val_samples)
+    test_size = len(test_samples)
+
+    return train_samples, val_samples, test_samples, train_size, val_size, test_size
+
+
 def rf_xgb_ds_generator(samples, coh_flag=False, int_flag=False):
     """
     :param samples:
