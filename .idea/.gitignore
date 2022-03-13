@@ -8,6 +8,9 @@
 *.idea
 *.iml
 
+# Ignore the 'filled-out' notebooks
+train_xgboost_filed_out.ipynb
+
 # Default ignored files
 /shelf/
 /workspace.xml
