@@ -15,7 +15,14 @@ from sklearn.metrics import classification_report
 from sklearn.metrics import jaccard_score
 import numpy as np
 
+
 def calc_metrics(y_true, y_pred):
+    """
+    Function used to calculate prediction metrics and report in tabular form
+    :param y_true: ndarray with ground truth labels
+    :param y_pred: ndarray with predicted labels
+    :return: None
+    """
     # Accuracy
     acc_fcn = tf.keras.metrics.Accuracy(name='Accuracy')
     acc_fcn.update_state(y_true=y_true,
@@ -68,9 +75,16 @@ def calc_metrics(y_true, y_pred):
     print(tabulate(metrics_df, headers='keys', tablefmt='psql'))
 
 
-# SUMMARY REPORT
+# SUMMARY REPORTS
 
 def tf_miou(y_true, y_pred):
+    """
+    Function to wrap the mean intersection over union calculation using tensorflow
+    :param y_true: ndarray with ground truth labels
+    :param y_pred: ndarray with predicted labels
+    :return: float with mean IoU
+    """
+
     # IoU
     mIoU_fcn = tf.keras.metrics.MeanIoU(num_classes=2, name='meanIoU')
     mIoU_fcn.update_state(y_true=y_true,
@@ -81,9 +95,14 @@ def tf_miou(y_true, y_pred):
 
 
 def summary_report(y_true_dict, y_pred_dict):
+    """
+    Function to generate a summary report and return a dataframe object
+    :param y_true_dict: dictionary with ground truth labels organized by scenario (e.g., co-event, etc.)
+    :param y_pred_dict: dictionary with predicted labels organized by scenario
+    :return: dataframe with metrics
+    """
     target_names = ['Not Water', 'Water']
 
-    #report_cols = ['Pre- and co-event intensity only', 'Pre- and co-event intensity and coherence']
     report_cols = y_true_dict.keys()
 
     report_rows = ['Overall Accuracy', 'Mean IoU', 'Jaccard Score',
@@ -95,7 +114,6 @@ def summary_report(y_true_dict, y_pred_dict):
 
     # Now loop through the classification report and populate the dataframe
 
-    #scenarios = ['Scenario 4', 'Scenario 5']
     scenarios = y_true_dict.keys()
 
     for scenario in scenarios:
@@ -119,7 +137,13 @@ def summary_report(y_true_dict, y_pred_dict):
 
 
 def miou_per_class(y_true_dict, y_pred_dict):
-    #Using built in keras function
+    """
+    Function to compute the intersection over union per class (i.e., water and not-water)
+    :param y_true_dict: dictionary with ground truth labels organized by scenario (e.g., co-event, etc.)
+    :param y_pred_dict: dictionary with predicted labels organized by scenario
+    :return: dataframe with intersection over union metrics (floats)
+    """
+    # Using built-in keras function
     from keras.metrics import MeanIoU
 
     report_cols = y_true_dict.keys()
@@ -133,15 +157,14 @@ def miou_per_class(y_true_dict, y_pred_dict):
     IOU_keras = MeanIoU(num_classes=num_classes)
 
     for scenario in y_true_dict.keys():
-
         IOU_keras.update_state(y_true_dict[scenario], y_pred_dict[scenario])
         miou_report.loc['Total mIoU', scenario] = IOU_keras.result().numpy()
 
-        #To calculate I0U for each class...
+        # To calculate I0U for each class...
         values = np.array(IOU_keras.get_weights()).reshape(num_classes, num_classes)
 
-        miou_report.loc['Not Water mIoU', scenario] = values[0,0]/(values[0,0] + values[0,1] + values[1,0])
-        miou_report.loc['Water mIoU', scenario] = values[1,1]/(values[1,1] + values[1,0] + values[0,1])
+        miou_report.loc['Not Water mIoU', scenario] = values[0, 0] / (values[0, 0] + values[0, 1] + values[1, 0])
+        miou_report.loc['Water mIoU', scenario] = values[1, 1] / (values[1, 1] + values[1, 0] + values[0, 1])
 
         IOU_keras.reset_state()
 
@@ -151,61 +174,10 @@ def miou_per_class(y_true_dict, y_pred_dict):
 
 
 def create_mask(pred_mask):
+    """
+    Function to create semantic mask given an ndarray of logits
+    :param pred_mask: ndarray of logits
+    :return: ndarray with shape (IMG_SIZE, IMG_SIZE) with predicted labels
+    """
     pred_mask = np.argmax(pred_mask, axis=-1)
-    #pred_mask = pred_mask[..., np.newaxis]
     return pred_mask
-
-
-def mIoU_bar_chart(df, keys, scenarios):
-
-    water_mIoU = pd.DataFrame()
-    water_loc = 2
-
-    total_mIoU = pd.DataFrame()
-    tot_mIoU_loc = 0
-
-    for key in keys:
-        water_mIoU[key] = df[key][scenarios].iloc[water_loc, :].T
-        total_mIoU[key] = df[key][scenarios].iloc[tot_mIoU_loc, :].T
-
-    # plot bar chart
-    water_mIoU.T.plot.bar(figsize=(15,10), title='Water mIoU', xlabel='Region', ylabel='Water mIoU')
-    total_mIoU.T.plot.bar(figsize=(15,10), title='Total mIoU', xlabel='Region', ylabel='Total mIoU')
-
-
-def f1_score_bar_chart(df, keys, scenarios):
-
-    water_f1 = pd.DataFrame()
-    water_f1_loc = 3
-
-    for key in keys:
-        water_f1[key] = df[key][scenarios].iloc[water_f1_loc, :].T
-
-    # plot bar chart
-    water_f1.T.plot.bar(figsize=(15,10), title='Water f1-score', xlabel='Region', ylabel='Water f1-score')
-
-
-def precision_score_bar_chart(df, keys, scenarios):
-
-    water_precision = pd.DataFrame()
-    water_prec_loc = 3
-
-    for key in keys:
-        water_precision[key] = df[key][scenarios].iloc[water_prec_loc, :].T
-
-    # plot bar chart
-    water_precision.T.plot.bar(figsize=(15,10), title='Water Precision', xlabel='Region', ylabel='Water Precision')
-
-
-def recall_score_bar_chart(df, keys, scenarios):
-
-    water_recall = pd.DataFrame()
-    water_rec_loc = 4
-
-    for key in keys:
-        water_recall[key] = df[key][scenarios].iloc[water_rec_loc, :].T
-
-    # plot bar chart
-    water_recall.T.plot.bar(figsize=(15,10), title='Water Recall', xlabel='Region', ylabel='Water Recall')
-
-
