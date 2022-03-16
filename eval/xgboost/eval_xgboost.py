@@ -56,6 +56,23 @@ def gen_lbl_overlap(y_true, y_pred):
     return combined
 
 
+###############################################################
+#       Create a function to plot the label overlap
+###############################################################
+
+# Generate color maps for the labels and label overlap
+
+from utils import general_utils
+
+wtr_cmap = general_utils.gen_cmap(['#f7f7f7', '#67a9cf'])
+ovrlp_cmap = general_utils.gen_cmap(['#67a9cf', '#f7f7f7', '#ef8a62', '#999999'])
+
+from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
+import matplotlib.font_manager as fm
+
+fontprops = fm.FontProperties(size=15)
+
+
 def display_lbl_overlap(y_true, lbl_overlap, x_test, num_plot, region, indices=None):
     """
     Function to display the label overlap
@@ -777,22 +794,6 @@ if __name__ == "__main__":
 
             X_test_hand_lbl_by_region[region][scen] = np.reshape(X_test_hand_lbl_by_region[region][scen],
                                                                  (-1, img_size, img_size, num_feat_dict[scen]))
-
-    ###############################################################
-    #       Create a function to plot the label overlap
-    ###############################################################
-
-    # Generate color maps for the labels and label overlap
-
-    from utils import general_utils
-
-    wtr_cmap = general_utils.gen_cmap(['#f7f7f7', '#67a9cf'])
-    ovrlp_cmap = general_utils.gen_cmap(['#67a9cf', '#f7f7f7', '#ef8a62', '#999999'])
-
-    from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
-    import matplotlib.font_manager as fm
-
-    fontprops = fm.FontProperties(size=15)
 
     ###############################################################
     #               Label Overlap for Region: USA
