@@ -2,7 +2,8 @@ import rasterio
 from shapely.geometry import box, mapping
 import fiona
 import rasterio.mask
-
+from tqdm import tqdm
+from osgeo import gdal
 
 def create_shp_from_geotiff(geotiff_pth, shp_outdir, chip_fname):
     """
@@ -75,3 +76,48 @@ def cut_geotiff_from_shp(shp_pth, geotiff_pth, cut_width, cut_height, out_dir, f
 
     with rasterio.open(out_pth, "w", **out_meta) as dest:
         dest.write(out_image)
+
+
+def cut_lrg_rstr(geotiff_pth, shp_pth, out_fpth, cut_height, cut_width):
+    """
+    Function to cut geotiff given an input shapefile with a smaller bounding box. This function uses GDAL
+    and nearest neighbor interpolation to fill in any border / overlap gaps
+
+    :param geotiff_pth: path to geotiff to cut
+    :param shp_pth: path to shapefile to use for cutting
+    :param out_fpth: output directory path
+    :param cut_height: integer, masked raster height
+    :param cut_width: integer, masked raster width
+    :return: None, function saves to disk
+    """
+
+    clip = gdal.Warp(out_fpth,
+                     geotiff_pth,
+                     format = 'GTiff',
+                     cutlineDSName = shp_pth,
+                     cropToCutline = True,
+                     resampleAlg = gdal.GRA_NearestNeighbour,
+                     width=cut_width,
+                     height=cut_height)
+
+
+def batch_clip_w_gdal(shp_fpaths, geotiff_pth, out_dir, fname, cut_height, cut_width):
+    """
+    Function to batch clip a large geotiff using GDAL
+    :param shp_fpaths: array containing paths to shapefiles
+    :param geotiff_pth: path to geotidd to cut
+    :param out_dir: output directory path
+    :param fname: output file name
+    :param cut_height: integer, masked raster height
+    :param cut_width: integer, masked raster width
+    :return: None, function saves to disk
+    """
+
+    for shp_pth in tqdm(shp_fpaths):
+
+        out_fpth = f"{out_dir}\\{fname}.tif"
+
+        try:
+            cut_lrg_rstr(geotiff_pth, shp_pth, out_fpth, cut_height, cut_width)
+        except:
+            continue
